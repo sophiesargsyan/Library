@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\Book; // Այս ֆայլը պետք է import անել, որպեսզի կարողանաս օգտագործել Book entity-ն։
+use App\Entity\Book; // Այս ֆայլը պետք է import անել, որպեսզի կարողանանք օգտագործել Book entity-ն։
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
