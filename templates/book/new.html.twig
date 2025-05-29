@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Նոր գիրք{% endblock %}
+
+{% block body %}
+    <h1>➕ Նոր գիրք</h1>
+
+    {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+        <div>
+            {{ form_label(form.title) }}
+            {{ form_widget(form.title) }}
+        </div>
+        <div>
+            {{ form_label(form.author) }}
+            {{ form_widget(form.author) }}
+        </div>
+        <div>
+            {{ form_label(form.year) }}
+            {{ form_widget(form.year) }}
+        </div>
+        <div>
+            {{ form_label(form.description) }}
+            {{ form_widget(form.description) }}
+        </div>
+        <div>
+            {{ form_label(form.coverImage) }}
+            {{ form_widget(form.coverImage) }}
+        </div>
+        <button type="submit">📥 Ավելացնել</button>
+    {{ form_end(form) }}
+
+    <a href="{{ path('book_index') }}">🔙 Վերադառնալ</a>
+{% endblock %}

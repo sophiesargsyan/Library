@@ -1,20 +1,24 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello BookController!{% endblock %}
+{% block title %}Գրքերի ցուցակ{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+    <h1>📚 Գրքերի ցուցակ</h1>
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
+    <a href="{{ path('book_new') }}">➕ Ավելացնել նոր գիրք</a>
 
-    This friendly message is coming from:
     <ul>
-        <li>Your controller at <code>/Applications/XAMPP/xamppfiles/htdocs/book_catalog/src/Controller/BookController.php</code></li>
-        <li>Your template at <code>/Applications/XAMPP/xamppfiles/htdocs/book_catalog/templates/book/index.html.twig</code></li>
+        {% for book in books %}
+            <li>
+                <strong>{{ book.title }}</strong> — {{ book.author }} ({{ book.year }})
+                <br>
+                <em>{{ book.description|length > 100 ? book.description[:100] ~ '...' : book.description }}</em>
+                {% if book.coverImage %}
+                    <img src="{{ asset('uploads/covers/' ~ book.coverImage) }}" alt="{{ book.title }} Cover" width="150">
+                {% endif %}
+            </li>
+        {% else %}
+            <li>Գրքեր չկան։</li>
+        {% endfor %}
     </ul>
-</div>
 {% endblock %}
