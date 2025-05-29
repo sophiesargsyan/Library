@@ -2,25 +2,70 @@
 
 namespace App\Controller;
 
-use App\Entity\Book; // Այս ֆայլը պետք է import անել, որպեսզի կարողանանք օգտագործել Book entity-ն։
+use App\Entity\Book;
+use App\Form\BookType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 final class BookController extends AbstractController
 {
-    // name: 'book_index' — սա route-ի անունն է, որը օգտագործվում է, երբ օրինակ՝ ուզում ես Twig-ում կամ PHP-ում հղում անել այս էջին:
     #[Route('/books', name: 'book_index')]
-    // Այս ֆունկցիան վերցնում է Book աղյուսակից բոլոր գրքերը և փոխանցում է Twig ֆայլին (index.html.twig), որպեսզի դրանք ցուցադրվեն էջում։
     public function index(EntityManagerInterface $entityManager): Response
-    // Symfony-ում հաճախ ֆունկցիաներ կամ class-եր չեն ստեղծում իրենց ներսում այն, ինչ իրենց պետք է, այլ ստանում են դրանք որպես dependency։
     {
-        //Սա վերցնում է Book entity-ի “գրադարանը” (repository), որը հնարավորություն է տալիս փնտրել տվյալներ։
-        // findAll() մեթոդը վերադարձնում է բոլոր գրքերը, որոնք պահվում են տվյալ աղյուսակում։
-        $books = $entityManager -> getRepository(Book::class) ->findAll();
+        $books = $entityManager->getRepository(Book::class)->findAll();
+
         return $this->render('book/index.html.twig', [
             'books' => $books,
+        ]);
+    }
+
+    #[Route('/books/new', name: 'book_new')]
+    public function new(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        SluggerInterface $slugger
+    ): Response {
+        $book = new Book();
+        $form = $this->createForm(BookType::class, $book);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Վերցնում ենք վերբեռնված նկարը՝ coverImage դաշտից
+            $coverImageFile = $form->get('coverImage')->getData();
+
+            if ($coverImageFile) {
+                // Ստեղծում ենք անվտանգ ֆայլի անուն՝ օրինակ՝ my-book-cover.jpg
+                $originalFilename = pathinfo($coverImageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename.'-'.uniqid().'.'.$coverImageFile->guessExtension();
+
+                try {
+                    $coverImageFile->move(
+                        $this->getParameter('cover_images_directory'), // սա config-ից է գալիս
+                        $newFilename
+                    );
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Ֆայլի վերբեռնումը ձախողվեց։');
+                    return $this->redirectToRoute('book_new');
+                }
+
+                // Գրքի վրա պահում ենք միայն ֆայլի անունը
+                $book->setCoverImage($newFilename);
+            }
+
+            $entityManager->persist($book);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('book_index');
+        }
+
+        return $this->render('book/new.html.twig', [
+            'form' => $form->createView(),
         ]);
     }
 }
